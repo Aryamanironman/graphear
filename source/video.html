@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>GraphEar — launch film</title>
+<style>
+  :root{
+    --bg:#060709; --ink:#F4F1EA; --muted:#8E949C; --faint:#565C64;
+    --accent:#6FF7C8; --warm:#FF9A6B; --line:rgba(244,241,234,.10);
+    --panel:rgba(255,255,255,.045);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+  body{
+    font-family:"Segoe UI Variable Display","Segoe UI",Inter,system-ui,sans-serif;
+    color:var(--ink);-webkit-font-smoothing:antialiased;
+  }
+  #stage{position:absolute;inset:0;background:
+    radial-gradient(1100px 700px at 20% -10%, rgba(111,247,200,.075), transparent 62%),
+    radial-gradient(900px 700px at 105% 110%, rgba(120,140,255,.055), transparent 60%),
+    var(--bg);}
+  #grain{position:absolute;inset:0;opacity:.16;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.5'/></svg>");
+    mix-blend-mode:overlay}
+  #vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%)}
+  .beat{position:absolute;inset:0;opacity:0}
+  .kick{position:absolute;left:140px;top:54px;font-size:13px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;font-weight:600}
+
+  /* ---------- scene 1 ---------- */
+  .s1{left:140px;top:300px;position:absolute;width:1500px}
+  .s1 .small{font-size:42px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
+  .s1 .big{font-size:118px;font-weight:600;letter-spacing:-.045em;line-height:1.02;margin-top:14px}
+  .s1 .big em{font-style:normal;color:var(--accent)}
+  .rule{height:1px;background:linear-gradient(90deg,var(--accent),rgba(111,247,200,0));transform-origin:left;margin-top:34px}
+
+  /* ---------- scene 2 ---------- */
+  .s2{position:absolute;left:140px;top:322px;width:1500px}
+  .s2 .l{font-size:82px;font-weight:500;letter-spacing:-.04em;line-height:1.22}
+  .s2 .l span{color:var(--faint)}
+  .s2 .sub{margin-top:34px;font-size:23px;color:var(--muted);letter-spacing:.01em;max-width:760px;line-height:1.5}
+  .trace{position:absolute;left:0;top:0;width:100%;height:1px;background:rgba(244,241,234,.08)}
+  .trace i{position:absolute;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px rgba(111,247,200,.8)}
+
+  /* ---------- scene 3 app window ---------- */
+  .app{position:absolute;left:170px;top:104px;width:1580px;height:872px;border-radius:22px;
+    background:linear-gradient(180deg,rgba(18,20,24,.96),rgba(10,11,14,.97));
+    border:1px solid rgba(244,241,234,.12);
+    box-shadow:0 60px 140px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06);
+    overflow:hidden;transform-origin:center top}
+  .chrome{height:44px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(244,241,234,.07);background:rgba(255,255,255,.015)}
+  .tl{display:flex;gap:7px}.tl i{width:10px;height:10px;border-radius:50%;background:rgba(244,241,234,.16)}
+  .chrome .url{margin-left:16px;font-size:12px;color:var(--faint);background:rgba(255,255,255,.04);border:1px solid rgba(244,241,234,.06);border-radius:7px;padding:5px 14px;letter-spacing:.02em}
+  .appbody{padding:20px 22px;display:grid;grid-template-columns:196px 1fr 196px;gap:20px;height:calc(100% - 44px)}
+  .pane{border:1px solid rgba(244,241,234,.075);border-radius:14px;background:rgba(255,255,255,.022);padding:15px}
+  .pane h4{font-size:9.5px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;font-weight:600;margin-bottom:12px}
+  .ds{padding:9px 10px;border-radius:9px;margin-bottom:4px;font-size:12px;color:#C9CDD3}
+  .ds small{display:block;color:var(--faint);font-size:10px;margin-top:2px}
+  .ds.on{background:rgba(111,247,200,.09);border:1px solid rgba(111,247,200,.22)}
+  .ds.on b{color:var(--accent);font-weight:600}
+  .maprow{display:flex;justify-content:space-between;font-size:10.5px;padding:7px 0;border-top:1px solid rgba(244,241,234,.05);color:var(--muted)}
+  .maprow:first-of-type{border-top:0}
+  .maprow b{color:var(--accent);font-weight:500}
+  .center{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .chead{display:flex;justify-content:space-between;align-items:flex-start}
+  .chead h3{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .chead p{font-size:10.5px;color:var(--faint);margin-top:4px}
+  .badge{font-size:9.5px;color:var(--accent);border:1px solid rgba(111,247,200,.3);background:rgba(111,247,200,.07);border-radius:999px;padding:5px 9px;white-space:nowrap}
+  .chartwrap{position:relative;flex:1;min-height:0}
+  svg.chart{width:100%;height:100%;display:block}
+  .gridline{stroke:rgba(244,241,234,.05)}
+  .axislabel{fill:var(--faint);font-size:9px;letter-spacing:.06em}
+  .seriesline{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .dot{fill:var(--accent)}
+  .spike{fill:var(--warm)}
+  .spikering{fill:none;stroke:var(--warm);stroke-width:1.2}
+  .ph{stroke:rgba(244,241,234,.5);stroke-width:1;stroke-dasharray:3 4}
+  .phdot{fill:#F4F1EA}
+  .transport{display:flex;align-items:center;gap:12px;border-top:1px solid rgba(244,241,234,.06);padding-top:10px}
+  .pbtn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(111,247,200,.4);background:rgba(111,247,200,.12);display:grid;place-items:center}
+  .time{font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums;width:78px}
+  .trk{flex:1;height:3px;background:rgba(255,255,255,.09);border-radius:99px;overflow:hidden}
+  .trk i{display:block;height:100%;background:var(--accent);width:0}
+  .read{font-size:10px;color:var(--muted);width:108px;text-align:right;font-variant-numeric:tabular-nums}
+  .read b{color:var(--ink)}
+  .eq{display:flex;align-items:flex-end;gap:2px;height:14px}
+  .eq i{width:2px;background:var(--accent);border-radius:2px}
+  .spikelabel{position:absolute;font-size:11px;color:var(--warm);letter-spacing:.02em;opacity:0}
+
+  /* ---------- scene 4 ---------- */
+  .s4{position:absolute;left:150px;top:196px;width:1620px}
+  .s4 .head{font-size:64px;font-weight:600;letter-spacing:-.04em;margin-bottom:62px}
+  .mrow{display:flex;align-items:center;height:172px;border-top:1px solid rgba(244,241,234,.07)}
+  .mrow .name{width:330px;font-size:34px;font-weight:600;letter-spacing:-.02em}
+  .mrow .name small{display:block;font-size:14px;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:6px}
+  .viz{flex:1;position:relative;height:70px}
+  .pitchdot{position:absolute;left:52%;width:16px;height:16px;border-radius:50%;background:var(--accent);box-shadow:0 0 26px rgba(111,247,200,.6)}
+  .pitchrail{position:absolute;left:52%;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(111,247,200,.35),transparent)}
+  .timerail{position:absolute;left:0;right:0;top:34px;height:1px;background:rgba(244,241,234,.12)}
+  .timesweep{position:absolute;top:29px;height:11px;border-radius:99px;background:linear-gradient(90deg,rgba(111,247,200,0),rgba(111,247,200,.85));width:0}
+  .panl,.panr{position:absolute;top:26px;width:14px;height:14px;border-radius:50%;background:var(--accent);opacity:.45}
+  .panl{left:calc(50% - 90px)}.panr{left:calc(50% + 76px)}
+  .panline{position:absolute;left:calc(50% - 76px);right:calc(50% - 76px);top:32px;height:1px;background:rgba(244,241,234,.14)}
+  .s4 .foot{position:absolute;left:150px;bottom:96px;font-size:19px;color:var(--muted)}
+
+  /* ---------- scene 5 ---------- */
+  .s5{position:absolute;left:120px;top:130px;width:1680px}
+  .s5 .head{font-size:58px;font-weight:600;letter-spacing:-.04em;margin-bottom:46px}
+  .panels{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .pcard{height:600px;border:1px solid rgba(244,241,234,.09);border-radius:20px;background:rgba(255,255,255,.028);padding:22px;position:relative;overflow:hidden}
+  .pcard .lab{font-size:10px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
+  .pcard .title{font-size:22px;font-weight:500;margin-top:8px;letter-spacing:-.01em}
+  .wave{position:absolute;left:22px;right:22px;bottom:30px;height:200px;display:flex;align-items:center;gap:3px}
+  .wave i{flex:1;background:linear-gradient(180deg,rgba(111,247,200,.95),rgba(111,247,200,.25));border-radius:2px;min-height:3px}
+  .txtlines{position:absolute;left:22px;right:22px;top:118px;font-size:15px;line-height:1.75;color:#C9CDD3}
+  .txtlines p{margin-bottom:14px}
+  .txtlines b{color:var(--ink)}
+  .tactile{position:absolute;left:22px;right:22px;bottom:34px;top:110px;display:flex;flex-direction:column;justify-content:space-between}
+  .tactile i{display:block;height:4px;border-radius:99px;background:rgba(244,241,234,.82)}
+  .tactile i.dim{background:rgba(244,241,234,.28)}
+  .s5 .foot{position:absolute;left:120px;bottom:86px;font-size:19px;color:var(--muted)}
+
+  /* ---------- scene 6 ---------- */
+  .s6{position:absolute;left:150px;top:250px;width:1620px}
+  .s6 .kick2{font-size:12px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-bottom:22px}
+  .s6 h2{font-size:66px;font-weight:600;letter-spacing:-.04em;margin-bottom:104px}
+  .steps{display:flex;align-items:flex-start;gap:0;position:relative}
+  .step{width:33.33%;padding-right:40px;position:relative}
+  .step .num{font-size:12px;color:var(--faint);letter-spacing:.18em;margin-bottom:22px}
+  .step .ico{width:62px;height:62px;border-radius:14px;border:1px solid rgba(111,247,200,.3);background:rgba(111,247,200,.07);display:grid;place-items:center;margin-bottom:26px}
+  .step h3{font-size:29px;font-weight:500;letter-spacing:-.015em;margin-bottom:10px}
+  .step p{font-size:16px;color:var(--muted);line-height:1.55;max-width:300px}
+  .connector{position:absolute;left:0;top:335px;height:1px;background:rgba(244,241,234,.12);width:100%}
+  .connector i{display:block;height:100%;background:var(--accent);width:0}
+
+  /* ---------- scene 7 ---------- */
+  .s7{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .lock{display:flex;align-items:center;gap:18px;margin-bottom:34px}
+  .lock .m{width:58px;height:58px;border-radius:17px;border:1px solid rgba(111,247,200,.32);background:rgba(111,247,200,.1);display:grid;place-items:center}
+  .lock .w{font-size:38px;font-weight:600;letter-spacing:-.03em}
+  .s7 h1{font-size:104px;font-weight:600;letter-spacing:-.045em;line-height:1.02}
+  .s7 h1 em{font-style:normal;color:var(--accent)}
+  .s7 .url{margin-top:36px;font-size:24px;color:var(--accent);letter-spacing:.02em}
+  .s7 .fine{margin-top:16px;font-size:15px;color:var(--faint);letter-spacing:.02em}
+  .s7 .tag{margin-top:52px;font-size:11px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+
+  #cursor{position:absolute;left:0;top:0;width:10px;height:10px;border-radius:50%;background:var(--ink);opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grain"></div>
+
+  <!-- 1 -->
+  <section class="beat" id="b1">
+    <div class="kick" id="k1">STEMergent Hacks 2026</div>
+    <div class="s1">
+      <div class="small" id="t1a">Every science lesson says</div>
+      <div class="big" id="t1b">“look at the graph.”</div>
+      <div class="rule" id="r1"></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="beat" id="b2">
+    <div class="s2">
+      <div class="l" id="t2a">For a blind student,</div>
+      <div class="l" id="t2b">that’s where the <span>lesson ends.</span></div>
+      <div class="sub" id="t2c">Numbers are read aloud. Shape, trend and outliers are not.</div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="beat" id="b3">
+    <div class="kick" id="k3">01 — Hear it</div>
+    <div id="appScale" style="position:absolute;inset:0">
+      <div class="app">
+        <div class="chrome">
+          <div class="tl"><i></i><i></i><i></i></div>
+          <div class="url">aryamanironman.github.io/graphear</div>
+        </div>
+        <div class="appbody">
+          <div class="pane">
+            <h4>Datasets</h4>
+            <div class="ds on"><b>CO₂ concentration</b><small>64 samples · sample.csv</small></div>
+            <div class="ds">Plant growth<small>40 samples · 2 series</small></div>
+            <div class="ds">Ocean temperature<small>48 samples · depth</small></div>
+            <h4 style="margin-top:22px">Series</h4>
+            <div class="maprow"><span>Primary</span><b>on</b></div>
+            <div class="maprow"><span>Speed</span><b>1×</b></div>
+          </div>
+
+          <div class="center">
+            <div class="chead">
+              <div>
+                <h3>CO₂ concentration — sample.csv</h3>
+                <p>64 samples · single series · 10.0s</p>
+              </div>
+              <span class="badge">Outlier at sample 48</span>
+            </div>
+            <div class="chartwrap" id="chartwrap">
+              <svg class="chart" viewBox="0 0 1100 680" id="chartSvg">
+                <g id="grid"></g>
+                <path class="seriesline" id="seriesPath" d=""/>
+                <g id="dots"></g>
+                <line class="ph" id="phLine" y1="20" y2="440"/>
+                <circle class="phdot" id="phDot" r="4"/>
+              </svg>
+              <div class="spikelabel" id="spikeLabel">that spike</div>
+            </div>
+            <div class="transport">
+              <div class="pbtn" id="pb">
+                <svg width="11" height="11" viewBox="0 0 14 14"><path d="M3 1.6v10.8L12 7z" fill="#6FF7C8"/></svg>
+              </div>
+              <span class="time" id="tlabel">0.0s / 10.0s</span>
+              <div class="trk"><i id="trkFill"></i></div>
+              <span class="read">Now <b id="readVal">—</b></span>
+              <div class="eq" id="eq"></div>
+            </div>
+          </div>
+
+          <div class="pane">
+            <h4>Sonification</h4>
+            <div class="maprow"><span>Pitch</span><b>value ↑</b></div>
+            <div class="maprow"><span>Time</span><b>sample →</b></div>
+            <div class="maprow"><span>Pan</span><b>series</b></div>
+            <h4 style="margin-top:24px">Description</h4>
+            <div style="font-size:10.5px;line-height:1.7;color:#B9BEC5" id="descMini">
+              Rising series, 64 samples. One spike near the end.
+            </div>
+            <h4 style="margin-top:24px">Accessibility</h4>
+            <div class="maprow"><span>Keyboard</span><b>full</b></div>
+            <div class="maprow"><span>Tactile</span><b>SVG</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:170px;bottom:56px;font-size:17px;color:var(--muted);letter-spacing:.01em" id="s3cap">One dataset, played as sound. Pitch is height. Time is time.</div>
+  </section>
+
+  <!-- 4 -->
+  <section class="beat" id="b4">
+    <div class="s4">
+      <div class="head" id="t4h">One dataset. Three channels.</div>
+      <div class="mrow" id="m1">
+        <div class="name">Pitch<small>value becomes height</small></div>
+        <div class="viz"><div class="pitchrail" id="prail"></div><div class="pitchdot" id="pdot"></div></div>
+      </div>
+      <div class="mrow" id="m2">
+        <div class="name">Time<small>sample order becomes rhythm</small></div>
+        <div class="viz"><div class="timerail"></div><div class="timesweep" id="tsweep"></div></div>
+      </div>
+      <div class="mrow" id="m3">
+        <div class="name">Pan<small>series becomes left and right</small></div>
+        <div class="viz"><div class="panline"></div><div class="panl" id="pl"></div><div class="panr" id="pr"></div></div>
+      </div>
+      <div class="foot" id="t4f">No sight required. Headphones optional.</div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="beat" id="b5">
+    <div class="s5">
+      <div class="head" id="t5h">Every insight, three ways in.</div>
+      <div class="panels">
+        <div class="pcard" id="pc1">
+          <div class="lab">01 — Sound</div>
+          <div class="title">Hear the shape</div>
+          <div class="wave" id="wave"></div>
+        </div>
+        <div class="pcard" id="pc2">
+          <div class="lab">02 — Text</div>
+          <div class="title">Read the finding</div>
+          <div class="txtlines" id="txtlines">
+            <p>Across <b>64 samples</b>, concentration rises <b>26.4%</b>.</p>
+            <p>One <b>spike at sample 48</b> breaks the trend.</p>
+            <p>Every other step stays within <b>4.8 ppm</b>.</p>
+          </div>
+        </div>
+        <div class="pcard" id="pc3">
+          <div class="lab">03 — Touch</div>
+          <div class="title">Print the curve</div>
+          <div class="tactile" id="tactile">
+            <i style="width:34%"></i><i style="width:48%" class="dim"></i><i style="width:61%"></i>
+            <i style="width:72%" class="dim"></i><i style="width:80%"></i><i style="width:88%" class="dim"></i>
+            <i style="width:96%"></i><i style="width:64%"></i><i style="width:42%"></i>
+          </div>
+        </div>
+      </div>
+      <div class="foot" id="t5f">Same numbers. A second channel.</div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="beat" id="b6">
+    <div class="s6">
+      <div class="kick2">How it works</div>
+      <h2 id="t6h">Drop a sheet. Press play.</h2>
+      <div class="steps">
+        <div class="step" id="st1">
+          <div class="num">01</div>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FF7C8" stroke-width="1.5"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/></svg></div>
+          <h3>Drop a CSV</h3>
+          <p>Any column of numbers. No formatting, no account.</p>
+        </div>
+        <div class="step" id="st2">
+          <div class="num">02</div>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FF7C8" stroke-width="1.5"><path d="M3 12h3l2.5-7 3.5 14 3-9 2 2h4"/></svg></div>
+          <h3>Press play</h3>
+          <p>Pitch, rhythm and stereo carry the data.</p>
+        </div>
+        <div class="step" id="st3">
+          <div class="num">03</div>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6FF7C8" stroke-width="1.5"><path d="M4 17h16M4 12h11M4 7h7"/></svg></div>
+          <h3>Take it with you</h3>
+          <p>Plain-language description and a tactile SVG for swell paper.</p>
+        </div>
+              </div>
+      <div class="note" id="t6n" style="margin-top:118px;font-size:20px;color:var(--muted);letter-spacing:.01em">No account. No formatting. Works with the screen reader you already use.</div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="beat" id="b7">
+    <div class="s7">
+      <div class="lock" id="lock">
+        <div class="m">
+          <svg width="30" height="30" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="9" width="2.6" height="9" rx="1.3" fill="#6FF7C8" opacity=".55"/>
+            <rect x="8" y="4" width="2.6" height="14" rx="1.3" fill="#6FF7C8" opacity=".85"/>
+            <rect x="13" y="7" width="2.6" height="11" rx="1.3" fill="#6FF7C8" opacity=".65"/>
+            <rect x="18" y="11" width="1.6" height="7" rx=".8" fill="#6FF7C8" opacity=".4"/>
+          </svg>
+        </div>
+        <div class="w">GraphEar</div>
+      </div>
+      <h1 id="t7h">Hear your <em>data.</em></h1>
+      <div class="url" id="t7u">aryamanironman.github.io/graphear</div>
+      <div class="fine" id="t7f">Free · browser-based · no install</div>
+      <div class="tag" id="t7t">Built for STEMergent Hacks 2026</div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============ data (same as the product) ============ */
+function makeSeries(n,start,drift,wobble,spikeAt,spikeAmt){
+  const a=[];
+  for(let i=0;i<n;i++){
+    const base=start+drift*(i/(n-1));
+    const w=Math.sin(i/3.1)*wobble+Math.sin(i/7.4)*wobble*0.45;
+    let v=base+w; if(i===spikeAt) v+=spikeAmt;
+    a.push(Math.round(v*10)/10);
+  }
+  return a;
+}
+const DATA=makeSeries(64,318,82,3.2,47,26);
+const N=DATA.length;
+
+const W=1100,H=680,PL=56,PR=20,PT=22,PB=40;
+const IW=W-PL-PR, IH=H-PT-PB;
+const yMin=Math.min(...DATA)-6, yMax=Math.max(...DATA)+6;
+const xAt=i=>PL+(i/(N-1))*IW;
+const yAt=v=>PT+IH-((v-yMin)/(yMax-yMin))*IH;
+
+/* ============ chart build ============ */
+const grid=document.getElementById('grid');
+for(let g=0;g<=4;g++){
+  const y=PT+(IH/4)*g;
+  grid.insertAdjacentHTML('beforeend',`<line class="gridline" x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}"/>`);
+  grid.insertAdjacentHTML('beforeend',`<text class="axislabel" x="${PL-8}" y="${y+3}" text-anchor="end">${Math.round(yMax-((yMax-yMin)/4)*g)}</text>`);
+}
+grid.insertAdjacentHTML('beforeend',`<text class="axislabel" x="${W-PR}" y="${PT-6}" text-anchor="end">PPM · TIME →</text>`);
+
+const pts=DATA.map((v,i)=>[xAt(i),yAt(v)]);
+const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(2)+' '+p[1].toFixed(2)).join(' ');
+const path=document.getElementById('seriesPath');
+path.setAttribute('d',d);
+const pathLen=path.getTotalLength();
+path.style.strokeDasharray=pathLen;
+path.style.strokeDashoffset=pathLen;
+
+const dots=document.getElementById('dots');
+let outIdx=0,outZ=-1;
+const mean=DATA.reduce((a,b)=>a+b,0)/N;
+const sd=Math.sqrt(DATA.reduce((a,b)=>a+(b-mean)**2,0)/N);
+DATA.forEach((v,i)=>{const z=Math.abs(v-mean)/sd; if(z>outZ){outZ=z;outIdx=i;}});
+const spikeX=xAt(outIdx), spikeY=yAt(DATA[outIdx]);
+DATA.forEach((v,i)=>{
+  if(i===outIdx) return;
+  dots.insertAdjacentHTML('beforeend',`<circle class="dot" cx="${xAt(i)}" cy="${yAt(v)}" r="1.9" opacity="0"/>`);
+});
+dots.insertAdjacentHTML('beforeend',`<circle class="spikering" id="spikeRing" cx="${spikeX}" cy="${spikeY}" r="9" opacity="0"/>`);
+dots.insertAdjacentHTML('beforeend',`<circle class="spike" id="spikeDot" cx="${spikeX}" cy="${spikeY}" r="3.6" opacity="0"/>`);
+const dotEls=[...dots.querySelectorAll('circle.dot')];
+
+/* waveform */
+const wave=document.getElementById('wave');
+const half=N/2;
+for(let i=0;i<half;i++){
+  const el=document.createElement('i');
+  wave.appendChild(el);
+}
+
+/* ============ helpers ============ */
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const smooth=x=>x*x*(3-2*x);
+const seg=(t,a,b,fi=.55,fo=.5)=>{
+  if(t<a||t>b) return 0;
+  return Math.min(clamp((t-a)/fi),clamp((b-t)/fo));
+};
+const easeOut=x=>1-Math.pow(1-clamp(x),3);
+function fade(el,t,a,b,fi=.6,fo=.5){
+  el.style.opacity=seg(t,a,b,fi,fo);
+}
+function rise(el,t,start,dur=.8,dist=26,fi=.6){
+  const p=easeOut((t-start)/dur);
+  el.style.opacity=clamp((t-start)/fi);
+  el.style.transform=`translateY(${(1-p)*dist}px)`;
+}
+function beatOn(id,on){document.getElementById(id).style.opacity=on?1:0;}
+
+/* ============ seek ============ */
+window.seek=function(t){
+  /* ---- scene 1: 0 – 4.6 ---- */
+  beatOn('b1', t<4.9);
+  if(t<4.9){
+    const a=clamp((t-0.15)/0.75);
+    document.getElementById('t1a').style.opacity=a;
+    document.getElementById('t1a').style.transform=`translateY(${(1-easeOut(a))*20}px)`;
+    const b=clamp((t-0.65)/0.85);
+    document.getElementById('t1b').style.opacity=b;
+    document.getElementById('t1b').style.transform=`translateY(${(1-easeOut(b))*34}px)`;
+    const r=clamp((t-1.35)/1.1);
+    document.getElementById('r1').style.transform=`scaleX(${easeOut(r)})`;
+    document.getElementById('k1').style.opacity=clamp((t-0.05)/0.6)*clamp((4.6-t)/0.4);
+  }
+
+  /* ---- scene 2: 4.6 – 9.6 ---- */
+  beatOn('b2', t>=4.5 && t<9.9);
+  if(t>=4.5 && t<9.9){
+    const l1=clamp((t-4.75)/0.7);
+    document.getElementById('t2a').style.opacity=l1;
+    document.getElementById('t2a').style.transform=`translateY(${(1-easeOut(l1))*24}px)`;
+    const l2=clamp((t-5.35)/0.75);
+    document.getElementById('t2b').style.opacity=l2;
+    document.getElementById('t2b').style.transform=`translateY(${(1-easeOut(l2))*24}px)`;
+    const l3=clamp((t-6.7)/0.8);
+    document.getElementById('t2c').style.opacity=l3;
+
+  }
+
+  /* ---- scene 3: 9.6 – 19.8 ---- */
+  beatOn('b3', t>=9.4 && t<20.0);
+  if(t>=9.4 && t<20.0){
+    const inP=easeOut((t-9.5)/0.9);
+    const app=document.getElementById('appScale');
+    app.style.opacity=clamp((t-9.45)/0.45);
+    app.style.transform=`translateY(${(1-inP)*40}px) scale(${0.975+0.025*inP})`;
+    document.getElementById('k3').style.opacity=clamp((t-9.6)/0.5)*clamp((19.6-t)/0.5);
+
+    /* chart draw 9.8 -> 11.2 */
+    const draw=clamp((t-9.8)/1.3);
+    path.style.strokeDashoffset=pathLen*(1-easeOut(draw));
+    dotEls.forEach((el,i)=>{
+      const p=clamp((t-(9.9+(i/N)*1.2))/0.18);
+      el.setAttribute('opacity',p*0.9);
+    });
+
+    /* playhead 10.0 -> 19.0 across data */
+    const phP=clamp((t-10.0)/8.8);
+    const idx=Math.min(N-1,Math.floor(phP*N));
+    const hx=PL+phP*IW;
+    const hy=yAt(DATA[idx]);
+    document.getElementById('phLine').setAttribute('x1',hx);
+    document.getElementById('phLine').setAttribute('x2',hx);
+    document.getElementById('phDot').setAttribute('cx',hx);
+    document.getElementById('phDot').setAttribute('cy',hy);
+    document.getElementById('trkFill').style.width=`${phP*100}%`;
+    document.getElementById('tlabel').textContent=`${(phP*10).toFixed(1)}s / 10.0s`;
+    document.getElementById('readVal').textContent=`${DATA[idx].toFixed(1)} ppm`;
+
+    /* spike reveal near 15.6 */
+    const sp=clamp((t-15.4)/0.5);
+    document.getElementById('spikeDot').setAttribute('opacity',sp);
+    const ringP=clamp((t-15.6)/1.4);
+    const ring=document.getElementById('spikeRing');
+    ring.setAttribute('opacity',(1-ringP)*0.85);
+    ring.setAttribute('r',8+ringP*22);
+    const sl=document.getElementById('spikeLabel');
+    const rectX=(spikeX/W)*100, rectY=(spikeY/H)*100;
+    sl.style.left=`calc(${rectX}% + 16px)`;
+    sl.style.top=`calc(${rectY}% - 26px)`;
+    sl.style.opacity=clamp((t-15.9)/0.4);
+    sl.style.transform=`translateY(${(1-easeOut(clamp((t-15.9)/0.5)))*8}px)`;
+
+    /* equalizer */
+    const eq=document.getElementById('eq');
+    if(!eq.childElementCount){for(let i=0;i<5;i++)eq.innerHTML+='<i style="height:4px"></i>';}
+    [...eq.children].forEach((el,i)=>{
+      const h=4+Math.abs(Math.sin(t*7+i*1.7))*10*(phP>0&&phP<1?1:0.25);
+      el.style.height=h+'px';
+    });
+
+    /* caption */
+    document.getElementById('s3cap').style.opacity=clamp((t-17.0)/0.6)*clamp((19.5-t)/0.5);
+  }
+
+  /* ---- scene 4: 19.8 – 25.8 ---- */
+  beatOn('b4', t>=19.6 && t<26.0);
+  if(t>=19.6 && t<26.0){
+    const h=clamp((t-19.8)/0.8);
+    document.getElementById('t4h').style.opacity=h;
+    document.getElementById('t4h').style.transform=`translateY(${(1-easeOut(h))*22}px)`;
+    const rows=[
+      {id:'m1',start:20.4,extra:()=>{
+        const p=clamp((t-20.6)/2.2);
+        document.getElementById('pdot').style.top=`${58-p*36}px`;
+        document.getElementById('pdot').style.opacity=p>0?1:0;
+        document.getElementById('prail').style.opacity=p>0?.7:0;
+      }},
+      {id:'m2',start:21.6,extra:()=>{
+        const p=clamp((t-21.8)/2.0);
+        document.getElementById('tsweep').style.width=`${p*100}%`;
+      }},
+      {id:'m3',start:22.8,extra:()=>{
+        const p=clamp((t-23.0)/1.8);
+        document.getElementById('pl').style.opacity=p*.9;
+        document.getElementById('pr').style.opacity=p*.9;
+        document.getElementById('pl').style.transform=`translateX(${-p*6}px)`;
+        document.getElementById('pr').style.transform=`translateX(${p*6}px)`;
+      }}
+    ];
+    rows.forEach(r=>{
+      const el=document.getElementById(r.id);
+      const a=clamp((t-r.start)/0.6);
+      el.style.opacity=a;
+      el.style.transform=`translateX(${(1-easeOut(a))*-18}px)`;
+      r.extra();
+    });
+    document.getElementById('t4f').style.opacity=clamp((t-24.0)/0.6)*clamp((25.8-t)/0.4);
+  }
+
+  /* ---- scene 5: 25.8 – 31.8 ---- */
+  beatOn('b5', t>=25.6 && t<32.0);
+  if(t>=25.6 && t<32.0){
+    const h=clamp((t-25.8)/0.7);
+    document.getElementById('t5h').style.opacity=h;
+    document.getElementById('t5h').style.transform=`translateY(${(1-easeOut(h))*20}px)`;
+    ['pc1','pc2','pc3'].forEach((id,k)=>{
+      const el=document.getElementById(id);
+      const a=clamp((t-(26.2+k*0.45))/0.8);
+      el.style.opacity=a;
+      el.style.transform=`translateY(${(1-easeOut(a))*30}px)`;
+    });
+    /* bars: animate heights + reveal progress */
+    const bars=[...wave.children];
+    const amp=clamp((t-26.6)/1.2);
+    bars.forEach((b,i)=>{
+      const v=DATA[Math.floor(i*(N/half))]/ (yMax);
+      const hgt=10+Math.abs(Math.sin(i*.55+t*3.1))*70*amp+ v*40*amp;
+      b.style.height=hgt+'px';
+      b.style.opacity=0.25+0.65*amp;
+    });
+    const txt=document.getElementById('txtlines');
+    const tp=clamp((t-27.3)/1.9);
+    [...txt.children].forEach((p,i)=>{
+      const a=clamp((tp*3)-i);
+      p.style.opacity=a;
+      p.style.transform=`translateY(${(1-a)*8}px)`;
+    });
+    const tc=document.getElementById('tactile');
+    const tp2=clamp((t-27.8)/1.7);
+    [...tc.children].forEach((line,i)=>{
+      const a=clamp((tp2*3)-i*0.28);
+      line.style.opacity=a;
+      line.style.transform=`scaleX(${0.2+0.8*easeOut(a)})`;
+      line.style.transformOrigin='left center';
+    });
+    document.getElementById('t5f').style.opacity=clamp((t-29.7)/0.6)*clamp((31.7-t)/0.4);
+  }
+
+  /* ---- scene 6: 31.8 – 37.2 ---- */
+  beatOn('b6', t>=31.6 && t<37.4);
+  if(t>=31.6 && t<37.4){
+    const k=clamp((t-31.8)/0.6);
+    document.querySelector('.kick2').style.opacity=k;
+    const h=clamp((t-31.95)/0.75);
+    document.getElementById('t6h').style.opacity=h;
+    document.getElementById('t6h').style.transform=`translateY(${(1-easeOut(h))*22}px)`;
+    ['st1','st2','st3'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      const a=clamp((t-(32.4+i*0.55))/0.7);
+      el.style.opacity=a;
+      el.style.transform=`translateY(${(1-easeOut(a))*26}px)`;
+    });
+    const nt=clamp((t-34.4)/0.8);
+    document.getElementById('t6n').style.opacity=nt;
+    document.getElementById('t6n').style.transform=`translateY(${(1-easeOut(nt))*14}px)`;
+  }
+
+  /* ---- scene 7: 37.2 – 42 ---- */
+  beatOn('b7', t>=37.0);
+  if(t>=37.0){
+    const cp=clamp((t-37.0)/0.65);
+    document.getElementById('lock').style.opacity=cp;
+    document.getElementById('lock').style.transform=`translateY(${(1-easeOut(cp))*18}px)`;
+    const hp=clamp((t-37.5)/0.85);
+    document.getElementById('t7h').style.opacity=hp;
+    document.getElementById('t7h').style.transform=`translateY(${(1-easeOut(hp))*28}px)`;
+    const up=clamp((t-38.35)/0.7);
+    document.getElementById('t7u').style.opacity=up;
+    const fp=clamp((t-38.7)/0.7);
+    document.getElementById('t7f').style.opacity=fp;
+    const tp=clamp((t-39.2)/0.8);
+    document.getElementById('t7t').style.opacity=tp;
+    /* hold to 41.3 then fade */
+    const out=clamp((42-t)/0.7);
+    document.getElementById('b7').style.opacity=Math.min(cp>0?1:0,out);
+  }
+};
+
+/* ============ player ============ */
+const DUR=42;
+const render=true||location.search.includes('render');
+if(location.search.includes('render')){
+  window.seek(0);
+} else {
+  let start=performance.now();
+  function tick(now){
+    const t=((now-start)/1000)%DUR;
+    window.seek(t);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>
