@@ -162,7 +162,7 @@
         <h2>Datasets</h2>
         <div id="datasetList"></div>
         <label class="drop" for="fileInput" style="margin-top:10px">
-          Open a CSV — header row + numbers
+          Open a CSV
           <input type="file" id="fileInput" accept=".csv,.tsv,.txt,text/csv" />
         </label>
         <select id="colSelect" aria-label="Choose the numeric column to sonify" style="display:none;width:100%;margin-top:9px;background:rgba(255,255,255,.05);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;font-size:12px"></select>
@@ -516,6 +516,7 @@ function loadCSVFile(f){
       $('#chartTitle').textContent=f.name+' — '+c.label;
       $('#chartSub').textContent=state.data.length+' samples · '+state.dur.toFixed(1)+'s sonification';
       renderChart(); describe(); setPlaying(false); updatePlayhead();
+      renderDatasetList();
     }
     apply(parseInt(sel.value,10));
     sel.onchange=function(){ apply(parseInt(sel.value,10)); };
